@@ -17,6 +17,7 @@ import glob
 
 import util
 from selenium.common.exceptions import TimeoutException
+import urllib
 
 if len(sys.argv) < 2:
     print('Please supply url to download')
@@ -33,8 +34,8 @@ def get_dir_name(base_url):
     tokens = base_url.split('/')
     return tokens[len(tokens)-1]
 
-import urllib
-def download_file(url, filename): # TODO: Replace with faster download. This streams the file, i want to save-as download
+
+def download_file(url, filename):
     # NOTE the stream=True parameter
     urllib.urlretrieve(url, filename)
     """ r = requests.get(url, stream=True)
@@ -103,9 +104,10 @@ if not os.path.isdir(full_dir_path):
 # Fetch all existing filenames so we can reduce # of fetches to website
 existing_file_titles = []
 for root, dir, files in os.walk(full_dir_path, topdown=True):
-    tokens = files.split('.')
-    filename = ''.join(tokens[:len(tokens)-1])
-    existing_file_titles.append(filename)
+    for file in files:
+        tokens = file.split('.')
+        filename = ''.join(tokens[:len(tokens)-1])
+        existing_file_titles.append(filename)
 
 print('Existing files: {0}'.format(existing_file_titles))
 
@@ -119,11 +121,14 @@ direct_urls = extract_direct_video_urls(driver, urls)
 
 driver.quit()
 
+print('Found a total of {0} downloads'.format(len(direct_urls)))
+counter = 0
 for url in direct_urls:
     filename = url[0] + '.' + url[2]
     fullpath = os.path.join(full_dir_path, filename)
     if (os.path.isfile(fullpath)):
         print('{0} already exists. Skipping'.format(filename))
     else:
-        print('Downloading {0}'.format(filename))
+        print('Downloading {0}/{1} - {2}'.format(counter, len(direct_urls), filename))
         download_file(url[1], fullpath)
+    counter += 1
