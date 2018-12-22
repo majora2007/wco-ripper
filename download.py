@@ -58,10 +58,14 @@ def extract_episode_urls(driver):
     urls = []
     elems = util.verify_elems(driver, '.cat-eps>a')
     for elem in elems:
+
         url = elem.get_attribute('href')
         title = url.split('/')[len(url.split('/'))-1]
-        print(title)
-        urls.append((title, url))
+        if not title in existing_file_titles:
+            print(title)
+            urls.append((title, url))
+        else:
+            print('This episode already exists, skipping')
     return urls
 
 def extract_direct_video_urls(driver, urls):
@@ -109,7 +113,7 @@ for root, dir, files in os.walk(full_dir_path, topdown=True):
         filename = ''.join(tokens[:len(tokens)-1])
         existing_file_titles.append(filename)
 
-print('Existing files: {0}'.format(existing_file_titles))
+#print('Existing files: {0}'.format(existing_file_titles))
 
 driver = util.init_chrome(full_dir_path)
 util.get_url(driver, base_url)
@@ -122,7 +126,7 @@ direct_urls = extract_direct_video_urls(driver, urls)
 driver.quit()
 
 print('Found a total of {0} downloads'.format(len(direct_urls)))
-counter = 0
+counter = 1
 for url in direct_urls:
     filename = url[0] + '.' + url[2]
     fullpath = os.path.join(full_dir_path, filename)
